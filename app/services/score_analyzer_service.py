@@ -93,10 +93,11 @@ class ScoreAnalyzerService:
     # ------------------------------------------------------------------ #
 
     async def _fetch_countries(self, country_id: Optional[int] = None):
+        africa_filter = "AND Continent LIKE '%Africa%'"
         where = (
-            f"WHERE IsDeleted = 0 AND CountryID = {country_id}"
+            f"WHERE IsDeleted = 0 AND CountryID = {country_id} {africa_filter}"
             if country_id
-            else "WHERE IsDeleted = 0"
+            else f"WHERE IsDeleted = 0 {africa_filter}"
         )
         return await self._db.engine.fetch_df_async(
             f"SELECT CountryID, CountryName, Continent FROM Countries {where}"
@@ -112,7 +113,7 @@ class ScoreAnalyzerService:
 
     async def analyze_all_countries(self, country_id: Optional[int] = None) -> bool:
         """
-        Run full analysis (questions → pillars → country) for all countries,
+        Run full analysis (questions → pillars → country) for African countries,
         or a single country when country_id is provided.
         """
         try:

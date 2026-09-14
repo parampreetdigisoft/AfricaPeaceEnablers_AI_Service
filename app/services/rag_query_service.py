@@ -568,7 +568,7 @@ class RAGQueryService:
             system_prompt = PeaceEnablerPillarPrompts.pillar_live_signals_prompt()
 
             user_template = """
-            Generate the LIVE global PEM pillar signals feed (all 23 pillars).
+            Generate the LIVE African APEM pillar signals feed (all 23 pillars).
 
             Current UTC datetime (now):
             {current_date}

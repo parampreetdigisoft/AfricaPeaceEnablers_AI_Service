@@ -5,8 +5,8 @@ from __future__ import annotations
 import re
 
 _PEM_ONLY = re.compile(
-    r"\b(pem score|pillar (score|rating)|kpi|index score|pem assessment|"
-    r"peace enablers matrix score)\b",
+    r"\b((a)?pem score|pillar (score|rating)|kpi|index score|(a)?pem assessment|"
+    r"africa peace enablers matrix score|peace enablers matrix score)\b",
     re.I,
 )
 _CURRENT_INTEL = re.compile(
@@ -25,9 +25,9 @@ _NEEDS_SOURCE = re.compile(
 def question_needs_web_search(question: str, rag_context: str) -> bool:
     """
     Web Search is conditional:
-    - PEM scores / KPIs / pillar ratings → RAG only
+    - APEM scores / KPIs / pillar ratings → RAG only
     - current conflict/risk/humanitarian or source-needed facts → search
-    - empty RAG for a non-PEM question → search
+    - empty RAG for a non-APEM question → search
     """
     q = question or ""
     if _PEM_ONLY.search(q) and not _CURRENT_INTEL.search(q):

@@ -173,7 +173,7 @@ async def get_emerging_trends_and_issues(
     ),
 ):
     """
-    Public homepage feed for emerging global risks and stability trends.
+    Public homepage feed for emerging African risks and stability trends.
 
     Returns structured country cards suitable for a public-facing UI.
     """
@@ -209,11 +209,11 @@ async def get_emerging_trends_and_issues(
 @router.get(
     "/pillar-live-signals",
     response_model=ChatPillarLiveSignalsResponse,
-    summary="Live global PEM pillar signals (all 23 pillars)",
+    summary="Live African APEM pillar signals (all 23 pillars)",
 )
 async def get_pillar_live_signals():
     """
-    Public feed: one concise live signal per Peace Enabler pillar (IDs 1–23).
+    Public feed: one concise live signal per APEM pillar (IDs 1–23), scoped to Africa.
     """
     try:
         response = await chat_service.get_pillar_live_signals()

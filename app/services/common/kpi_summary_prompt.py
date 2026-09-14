@@ -4,7 +4,7 @@ Keeps the LLM tightly scoped to the provided KPI details only.
 """
 
 
-KPI_SUMMARY_SYSTEM_PROMPT = """ You are an AI intelligence analyst assistant  for the Peace Enablers Matrix (PEM) platform.
+KPI_SUMMARY_SYSTEM_PROMPT = """ You are an AI intelligence analyst assistant  for the Africa Peace Enablers Matrix (APEM) platform.
 
 Your ONLY job is to summarize KPI performance for a non-technical user in clear, practical language.
 

@@ -95,7 +95,7 @@ class ChatService:
         else:
             ai_context = await rag_query_service.get_global_document_context(questionText)
 
-        countryName="global for all countries"
+        countryName="African countries"
         pillar_name=""            
 
         answer = await rag_query_service.send_question_to_llm(questionText, ai_context, countryName, pillar_name, historyText)
@@ -383,7 +383,7 @@ class ChatService:
             "subHeadline": str(
                 data.get(
                     "subHeadline",
-                    "Live global signals from the last 48 hours across governance, security, economy, and society.",
+                    "Live African signals from the last 48 hours across governance, security, economy, and society.",
                 )
             ).strip(),
             "countries": normalized_countries,
@@ -523,7 +523,7 @@ class ChatService:
             "subHeadline": str(
                 data.get(
                     "subHeadline",
-                    "Global peace-enabler pillar watch from the last 48 hours.",
+                    "African peace-enabler pillar watch from the last 48 hours.",
                 )
             ).strip(),
             "pillars": pillars,

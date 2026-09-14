@@ -1,4 +1,9 @@
 
+
+# # Create virtual environment
+#  & "C:\Users\pc\AppData\Local\Programs\Python\Python311\python.exe" --version
+#  & "C:\Users\pc\AppData\Local\Programs\Python\Python311\python.exe" -m venv .venv
+
 # # Create virtual environment
 # python -m venv .venv
 

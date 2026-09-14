@@ -32,7 +32,7 @@ async def run_analysis_task(task_name: str, coro):
 @router.post("/analyze/full", response_model=AnalysisResponse)
 async def analyze_all_countries_full():
     """
-    Analyze table data and provide global summary for the assessment result for all countries
+    Analyze table data and provide an Africa-wide summary for the assessment result for African countries
     Returns immediately while analysis runs in background
     """
     try:
@@ -101,7 +101,7 @@ async def analyze_missing_pillar_questions(request: MissingPillarQuestionRequest
 @router.post("/analyze/{country_id}/full", response_model=AnalysisResponse)
 async def analyze_single_country_full(country_id: int):
     """
-    Analyze table data and provide global summary for a single Country
+    Analyze table data and provide a country summary for a single African country
     Returns immediately while analysis runs in background
     """
     try:

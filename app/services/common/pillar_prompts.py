@@ -18,10 +18,10 @@ _PILLAR_FEED_OUTPUT_STYLE = """
 
 
 class PeaceEnablerPillarPrompts:
-    """Provides context, focus areas, and research signals for all 23 Peace Enabler pillars."""
+    """Provides context, focus areas, and research signals for all 23 APEM pillars."""
     GOVERNANCE_PROTOCOL = """
         =============================================================================
-        AI MASTER GOVERNANCE PROTOCOL (PEM) — MANDATORY FOR EVERY ASSESSMENT
+        AI MASTER GOVERNANCE PROTOCOL (APEM) — MANDATORY FOR EVERY ASSESSMENT
         =============================================================================
 
         1. TEMPORAL SCOPE
@@ -691,7 +691,7 @@ class PeaceEnablerPillarPrompts:
 
     @classmethod
     def get_pillar_catalog_for_live_feed(cls) -> str:
-        """Compact PEM pillar catalog for live global pillar signals."""
+        """Compact APEM pillar catalog for live African pillar signals."""
         lines = []
         for pid in sorted(cls.PILLAR_CONTEXTS.keys()):
             pillar = cls.PILLAR_CONTEXTS[pid]
@@ -707,23 +707,23 @@ class PeaceEnablerPillarPrompts:
     def pillar_live_signals_prompt(cls) -> str:
         catalog = cls.get_pillar_catalog_for_live_feed()
         return f"""
-        You are the Peace Enablers Matrix (PEM) live pillar intelligence engine.
+        You are the Africa Peace Enablers Matrix (APEM) live pillar intelligence engine.
 
-        Produce a LIVE global snapshot: exactly ONE card per PEM pillar (IDs 1–23).
+        Produce a LIVE Africa snapshot: exactly ONE card per APEM pillar (IDs 1–23).
         Use the pillar definitions below to ground each card in the correct domain.
 
         ==================================================
-        PEM PILLAR CATALOG (ALL 23 — MANDATORY COVERAGE)
+        APEM PILLAR CATALOG (ALL 23 — MANDATORY COVERAGE)
         ==================================================
         {catalog}
 
         ==================================================
         MANDATORY: LIVE WEB SEARCH
         ==================================================
-        Before writing JSON, search credible global news for each pillar domain.
-        For each pillar, find the most relevant global signal from the LAST 48 HOURS.
+        Before writing JSON, search credible African and Africa-focused news for each pillar domain.
+        For each pillar, find the most relevant African signal from the LAST 48 HOURS.
         Older context only if an actively developing trend requires brief background
-        (same rules as PEM live country feed).
+        (same rules as APEM live country feed).
 
         ==================================================
         sourceUrl RULES
@@ -737,7 +737,7 @@ class PeaceEnablerPillarPrompts:
         ==================================================
         - Return EXACTLY 23 pillar objects (pillarId 1 through 23, each once).
         - title: max 55 characters — headline-style.
-        - summary: max 100 characters — one clear global signal for this pillar.
+        - summary: max 100 characters — one clear African signal for this pillar.
         - type: "risk" or "trend" (lowercase).
         - status: Rising | Active | Watch | Stable | Critical
         - urgency: low | medium | high | critical
@@ -751,13 +751,13 @@ class PeaceEnablerPillarPrompts:
         {{
             "updatedAt": "2026-05-25T12:00:00Z",
             "headline": "Live Pillar Signals",
-            "subHeadline": "Global peace-enabler pillar watch from the last 48 hours.",
+            "subHeadline": "African peace-enabler pillar watch from the last 48 hours.",
             "pillars": [
                 {{
                     "pillarId": 1,
                     "type": "risk",
                     "title": "Short headline",
-                    "summary": "One sentence global signal for this pillar domain.",
+                    "summary": "One sentence African signal for this pillar domain.",
                     "status": "Watch",
                     "urgency": "medium",
                     "color": "yellow",

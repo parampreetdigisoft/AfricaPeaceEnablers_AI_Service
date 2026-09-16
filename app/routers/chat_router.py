@@ -167,8 +167,9 @@ async def get_emerging_trends_and_issues(
         default=None,
         ge=0,
         description=(
-            "GDELT keyword variant index (0–5). Omit to auto-rotate every 5 minutes. "
-            "Each variant uses a different 2–3 keyword OR group, or all six terms."
+            "Peace-Africa keyword index. Each request uses a different short QUERY "
+            "(Africa peace, conflict, protest, African stability, governance, security, "
+            "election, ceasefire). Uses timespan=1week. Omit to auto-rotate every 2 minutes."
         ),
     ),
 ):

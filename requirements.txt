@@ -34,30 +34,56 @@
 
 
 # C:\nssm\win64
-# $nssm = "C:\nssm-2.24\win64\nssm.exe"
-# $serviceName = "PeaceEnablers_AI_Service"
-# $pythonPath = "C:\inetpub\wwwroot\PeaceEnablers_AI_Service\.venv\Scripts\python.exe"
-# $workDir = "C:\inetpub\wwwroot\PeaceEnablers_AI_Service"
+# $nssm = "C:\nssm\win64\nssm.exe"
+# $serviceName = "AfricaPeaceEnablers_AI_Service"
+# $pythonPath = "C:\WebApps\AfricaPeaceEnablers_AI_Service\.venv\Scripts\python.exe"
+# $workDir = "C:\WebApps\AfricaPeaceEnablers_AI_Service"
 
 # & $nssm install $serviceName $pythonPath "run.py"
 # & $nssm set $serviceName AppDirectory $workDir
-# & $nssm set $serviceName AppStdout "C:\inetpub\wwwroot\PeaceEnablers_AI_Service\logs\service.log"
-# & $nssm set $serviceName AppStderr "C:\inetpub\wwwroot\PeaceEnablers_AI_Service\logs\error.log"
+# & $nssm set $serviceName AppStdout "C:\WebApps\AfricaPeaceEnablers_AI_Service\logs\service.log"
+# & $nssm set $serviceName AppStderr "C:\WebApps\AfricaPeaceEnablers_AI_Service\logs\error.log"
 # & $nssm set $serviceName Start SERVICE_AUTO_START
 
 #& $nssm start $serviceName
 
-# New-Item -ItemType Directory -Force "C:\inetpub\wwwroot\PeaceEnablers_AI_Service\logs"
+# New-Item -ItemType Directory -Force "C:\WebApps\AfricaPeaceEnablers_AI_Service\logs"
 # If You Ever Need to Restart After Code Changes
-# $nssm = "C:\nssm-2.24\win64\nssm.exe"
+# $nssm = "C:\nssm\win64\nssm.exe"
 
 # # Restrart nssm
-# cd C:\nssm-2.24\win64
-# .\nssm.exe stop PeaceEnablers_AI_Service
-# .\nssm.exe start PeaceEnablers_AI_Service
+# cd C:\nssm\win64
+# .\nssm.exe stop AfricaPeaceEnablers_AI_Service
+# .\nssm.exe start AfricaPeaceEnablers_AI_Service
+# .\nssm.exe restart AfricaPeaceEnablers_AI_Service
 
-# .\nssm.exe restart PeaceEnablers_AI_Service
 
+
+
+# -- Create database user for Windows LocalSystem account
+# IF NOT EXISTS (
+#     SELECT 1
+#     FROM sys.database_principals
+#     WHERE name = N'NT AUTHORITY\SYSTEM'
+# )
+# BEGIN
+#     CREATE USER [NT AUTHORITY\SYSTEM] FOR LOGIN [NT AUTHORITY\SYSTEM];
+# END
+# GO
+
+# -- Read permission: SELECT from tables/views
+# ALTER ROLE [db_datareader]
+# ADD MEMBER [NT AUTHORITY\SYSTEM];
+# GO
+
+# -- Write permission: INSERT/UPDATE/DELETE
+# ALTER ROLE [db_datawriter]
+# ADD MEMBER [NT AUTHORITY\SYSTEM];
+# GO
+
+# -- Execute all stored procedures/functions that allow EXECUTE permission
+# GRANT EXECUTE TO [NT AUTHORITY\SYSTEM];
+# GO
 
 
 # Core API Framework

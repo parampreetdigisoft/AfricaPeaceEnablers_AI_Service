@@ -14,6 +14,7 @@ from app.services.rag_query_service import rag_query_service
 from app.services.common.llm_base_service import LLMBaseService
 from app.services.common import json_response_parser as jrp
 from app.services.common.pillar_prompts import PeaceEnablerPillarPrompts
+from app.services.common.country_prompt import PEMPromptTemplates
 from app.view_models.EmergingTrendsResult import EmergingTrendsResult
 from app.view_models.PillarLiveSignalsResult import PillarLiveSignalsResult
 from app.services.common.url_verifier import ensure_live_source_url
@@ -286,7 +287,8 @@ class ChatService:
             "migration": "Migration",
             "society": "Society",
             "technology": "Technology",
-            "health": "Health",
+            "health": "Society",
+            "peace": "Peace",
         }
         status_map = {
             "rising": "Rising",
@@ -304,7 +306,8 @@ class ChatService:
             "migration": "migration",
             "society": "society",
             "technology": "technology",
-            "health": "health",
+            "health": "society",
+            "peace": "peace",
         }
 
         countries_raw = data.get("countries") or []
@@ -327,6 +330,8 @@ class ChatService:
 
             icon = str(item.get("icon", category_key or "governance")).strip().lower()
             icon = icon_map.get(icon, icon_map.get(category_key, "governance"))
+            if icon not in icon_map.values():
+                icon = "governance"
 
             urgency = str(item.get("urgency", "medium")).strip().lower()
             card_type = str(item.get("type", "risk")).strip().lower()
@@ -345,6 +350,14 @@ class ChatService:
 
             source_url = ChatService._normalize_source_url(item)
             if not source_url:
+                continue
+
+            if not PEMPromptTemplates.is_african_country_card(
+                country=str(item.get("country", "")),
+                country_code=str(item.get("countryCode", "")),
+                region=str(item.get("region", "")),
+                title=str(item.get("title", "")),
+            ):
                 continue
 
             title = ChatService._strip_source_mentions(

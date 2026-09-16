@@ -2,6 +2,7 @@
 APEM Prompt Templates — Static class holding ALL system prompts.
 Import this wherever a prompt is needed; never inline prompts in service files.
 """
+import re
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Sequence, Tuple
 from urllib.parse import quote
@@ -1489,15 +1490,168 @@ class PEMPromptTemplates:
     """
 
     
-    # GDELT emerging-trends query variants (rotate to avoid identical URLs / rate limits)
-    GDELT_EMERGING_KEYWORD_VARIANTS: Tuple[Tuple[str, ...], ...] = (
-        ("war", "conflict"),
-        ("terrorism", "protest"),
-        ("sanctions", "military"),
-        ("war", "conflict", "terrorism"),
-        ("protest", "sanctions", "military"),
-        ("war", "conflict", "terrorism", "protest", "sanctions", "military"),
+    # Rotate a short peace-Africa keyword query each poll (GDELT DOC 2.0 QUERY field).
+    GDELT_EMERGING_KEYWORD_VARIANTS: Tuple[str, ...] = (
+        "Africa peace",
+        "Africa conflict",
+        "Africa protest",
+        '"African stability"',
+        "Africa governance",
+        "Africa security",
+        "Africa election",
+        "Africa ceasefire",
     )
+
+    GDELT_TIMESPAN = "1week"
+    GDELT_POLL_BUCKET_SEC = 120
+
+    AFRICAN_COUNTRY_ISO2 = {
+        "algeria": "DZ", "angola": "AO", "benin": "BJ", "botswana": "BW",
+        "burkina faso": "BF", "burundi": "BI", "cabo verde": "CV", "cape verde": "CV",
+        "cameroon": "CM", "central african republic": "CF", "chad": "TD",
+        "comoros": "KM", "congo": "CG", "republic of the congo": "CG",
+        "democratic republic of the congo": "CD", "democratic republic of congo": "CD",
+        "drc": "CD", "dr congo": "CD", "cote d'ivoire": "CI", "ivory coast": "CI",
+        "djibouti": "DJ", "egypt": "EG", "equatorial guinea": "GQ", "eritrea": "ER",
+        "eswatini": "SZ", "swaziland": "SZ", "ethiopia": "ET", "gabon": "GA",
+        "gambia": "GM", "ghana": "GH", "guinea": "GN", "guinea-bissau": "GW",
+        "kenya": "KE", "lesotho": "LS", "liberia": "LR", "libya": "LY",
+        "madagascar": "MG", "malawi": "MW", "mali": "ML", "mauritania": "MR",
+        "mauritius": "MU", "morocco": "MA", "mozambique": "MZ", "namibia": "NA",
+        "niger": "NE", "nigeria": "NG", "rwanda": "RW", "sao tome and principe": "ST",
+        "senegal": "SN", "seychelles": "SC", "sierra leone": "SL", "somalia": "SO",
+        "south africa": "ZA", "south sudan": "SS", "sudan": "SD", "tanzania": "TZ",
+        "togo": "TG", "tunisia": "TN", "uganda": "UG", "western sahara": "EH",
+        "zambia": "ZM", "zimbabwe": "ZW",
+    }
+
+    AFRICAN_ISO2 = frozenset(AFRICAN_COUNTRY_ISO2.values())
+
+    AFRICAN_FIPS = frozenset({
+        "AG", "AO", "BN", "BC", "UV", "BY", "CV", "CM", "CT", "CD", "CN", "CF",
+        "CG", "IV", "DJ", "EG", "EK", "ER", "WZ", "ET", "GB", "GA", "GH", "GV",
+        "PU", "KE", "LT", "LI", "LY", "MA", "MI", "ML", "MR", "MP", "MO", "MZ",
+        "WA", "NG", "NI", "RW", "SG", "SE", "SL", "SO", "SF", "OD", "SU", "TZ",
+        "TO", "TS", "UG", "ZA", "ZI",
+    })
+
+    AFRICAN_REGION_ALIASES = frozenset({
+        "africa", "north africa", "west africa", "east africa",
+        "central africa", "southern africa", "sub-saharan africa",
+        "horn of africa", "sahel", "maghreb",
+    })
+
+    AFRICAN_GEO_PHRASES = (
+        "south africa", "south sudan", "ivory coast", "cote d'ivoire",
+        "cape verde", "burkina faso", "sierra leone", "guinea-bissau",
+        "equatorial guinea", "central african republic", "western sahara",
+        "dr congo", "north africa", "west africa", "east africa",
+        "central africa", "southern africa", "sub-saharan africa",
+    )
+
+    AFRICAN_GEO_WORDS = frozenset({
+        "africa", "african",
+        "algeria", "angola", "benin", "botswana", "burundi", "cameroon",
+        "chad", "comoros", "congo", "djibouti", "egypt", "eritrea",
+        "eswatini", "ethiopia", "gabon", "gambia", "ghana", "guinea",
+        "kenya", "lesotho", "liberia", "libya", "madagascar", "malawi",
+        "mali", "mauritania", "mauritius", "morocco", "mozambique",
+        "namibia", "niger", "nigeria", "rwanda", "senegal", "seychelles",
+        "somalia", "sudan", "swaziland", "tanzania", "togo", "tunisia",
+        "uganda", "zambia", "zimbabwe",
+        "lagos", "nairobi", "accra", "cairo", "johannesburg", "kinshasa",
+        "addis", "kampala", "dakar", "abidjan", "khartoum", "mogadishu",
+    })
+
+    NON_AFRICAN_GEO_PHRASES = (
+        "new delhi", "new york", "united states", "united kingdom",
+        "sri lanka", "hong kong", "saudi arabia", "south korea",
+    )
+
+    NON_AFRICAN_GEO_WORDS = frozenset({
+        "india", "indian", "mumbai", "delhi", "pakistan", "china", "ukraine",
+        "russia", "israel", "gaza", "iran", "afghanistan", "bangladesh",
+        "london", "paris", "singapore", "washington", "dubai", "iraq", "syria",
+        "turkey", "indonesia", "brazil", "mexico", "canada", "germany", "france",
+    })
+
+    @classmethod
+    def _normalize_country_name(cls, country: str) -> str:
+        n = (country or "").strip().lower()
+        for prefix in (
+            "the ", "federal republic of ", "united republic of ", "kingdom of ",
+            "democratic republic of the ", "democratic republic of ",
+            "republic of the ", "republic of ",
+        ):
+            if n.startswith(prefix):
+                n = n[len(prefix):]
+        return n.replace(".", "").replace(",", "").strip()
+
+    @staticmethod
+    def _normalize_geo_text(*parts: str) -> str:
+        text = " ".join(str(p or "") for p in parts).lower()
+        text = text.replace("indian ocean", " ")
+        return re.sub(r"[^a-z0-9'\-\s]", " ", text)
+
+    @classmethod
+    def _has_phrase_or_word(cls, text: str, phrases: Sequence[str], words) -> bool:
+        if not text:
+            return False
+        padded = f" {text} "
+        for phrase in phrases:
+            if phrase and f" {phrase} " in padded:
+                return True
+        for word in words:
+            if word and re.search(rf"\b{re.escape(word)}\b", text):
+                return True
+        return False
+
+    @classmethod
+    def is_african_source_country(cls, sourcecountry: str) -> bool:
+        raw = (sourcecountry or "").strip()
+        if not raw:
+            return False
+        code = raw.upper()
+        if len(code) == 2 and (code in cls.AFRICAN_FIPS or code in cls.AFRICAN_ISO2):
+            return True
+        n = cls._normalize_country_name(raw)
+        return n in cls.AFRICAN_COUNTRY_ISO2
+
+    @classmethod
+    def is_african_news_article(cls, title: str, sourcecountry: str = "") -> bool:
+        text = cls._normalize_geo_text(title)
+        if text and cls._has_phrase_or_word(text, cls.NON_AFRICAN_GEO_PHRASES, cls.NON_AFRICAN_GEO_WORDS):
+            return False
+        if cls.is_african_source_country(sourcecountry):
+            return True
+        return bool(text) and cls._has_phrase_or_word(
+            text, cls.AFRICAN_GEO_PHRASES, cls.AFRICAN_GEO_WORDS
+        )
+
+    @classmethod
+    def is_african_country_card(
+        cls,
+        country: str = "",
+        country_code: str = "",
+        region: str = "",
+        title: str = "",
+    ) -> bool:
+        if cls._has_phrase_or_word(
+            cls._normalize_geo_text(title, country, region),
+            cls.NON_AFRICAN_GEO_PHRASES,
+            cls.NON_AFRICAN_GEO_WORDS,
+        ):
+            return False
+
+        code = (country_code or "").strip().upper()
+        country_n = cls._normalize_country_name(country)
+        region_n = (region or "").strip().lower()
+        return (
+            (len(code) == 2 and (code in cls.AFRICAN_ISO2 or code in cls.AFRICAN_FIPS))
+            or country_n in cls.AFRICAN_COUNTRY_ISO2
+            or region_n in cls.AFRICAN_REGION_ALIASES
+            or cls.is_african_source_country(country)
+        )
 
     @staticmethod
     def gdelt_emerging_variant_count() -> int:
@@ -1505,40 +1659,46 @@ class PEMPromptTemplates:
 
     @staticmethod
     def pick_gdelt_emerging_variant_index() -> int:
-        """Rotate variant every 5 minutes (UTC) so repeated calls are not identical."""
-        bucket = int(datetime.now(timezone.utc).timestamp()) // 300
+        """Rotate keyword every 2 minutes (UTC)."""
+        bucket = int(datetime.now(timezone.utc).timestamp()) // PEMPromptTemplates.GDELT_POLL_BUCKET_SEC
         return bucket % PEMPromptTemplates.gdelt_emerging_variant_count()
 
     @staticmethod
-    def _gdelt_emerging_query_string(keywords: Sequence[str]) -> str:
-        inner = " OR ".join(k.strip() for k in keywords if k and k.strip())
-        return f"({inner}) (Africa OR African) sourcelang:english"
+    def _gdelt_emerging_query_string(topic: str) -> str:
+        query = (topic or "Africa peace").strip()
+        return query or "Africa peace"
 
     @staticmethod
     def emerging_trends_gdelt_url(
         max_records: int,
         variant_index: Optional[int] = None,
+        now_utc: Optional[datetime] = None,
     ) -> Tuple[str, int]:
         """
-        Build GDELT Doc API URL (last 24h, English).
-
-        Returns (url, variant_index_used). Each variant uses a different keyword subset.
+        Short GDELT DOC 2.0 ArtList URL: rotating peace-Africa keywords + timespan.
         """
-        variants = PEMPromptTemplates.GDELT_EMERGING_KEYWORD_VARIANTS
-        n_variants = len(variants)
+        now = now_utc or datetime.now(timezone.utc)
+        topics = PEMPromptTemplates.GDELT_EMERGING_KEYWORD_VARIANTS
+        bucket = int(now.timestamp()) // PEMPromptTemplates.GDELT_POLL_BUCKET_SEC
+
         if variant_index is None:
-            idx = PEMPromptTemplates.pick_gdelt_emerging_variant_index()
+            idx = bucket % len(topics)
         else:
-            idx = int(variant_index) % n_variants
+            idx = int(variant_index) % len(topics)
 
         n = max(1, min(250, int(max_records)))
-        query = PEMPromptTemplates._gdelt_emerging_query_string(variants[idx])
-        encoded_query = quote(query, safe="")
+        encoded_query = quote(
+            PEMPromptTemplates._gdelt_emerging_query_string(topics[idx]),
+            safe="",
+        )
 
         url = (
             "https://api.gdeltproject.org/api/v2/doc/doc"
             f"?query={encoded_query}"
-            f"&mode=ArtList&maxrecords={n}&format=json&timespan=24h&sort=DateDesc"
+            f"&mode=artlist"
+            f"&maxrecords={n}"
+            f"&timespan={PEMPromptTemplates.GDELT_TIMESPAN}"
+            f"&format=json"
         )
         return url, idx
 
@@ -1554,8 +1714,9 @@ class PEMPromptTemplates:
         ==================================================
         DATA SOURCE (MANDATORY)
         ==================================================
-        You will receive a JSON list of news articles from the GDELT Doc API (last 24 hours).
-        You MUST produce exactly one country card for EVERY article in that list (no skipping, no extras).
+        You will receive a JSON list of news articles from the GDELT Doc API.
+        Produce one country card for each article that clearly concerns an African country.
+        SKIP non-African stories (India, Europe, US, Middle East outside North Africa, etc.).
 
         CRITICAL:
         - Use ONLY the articles provided in the user message. Do not browse the web.
@@ -1577,7 +1738,7 @@ class PEMPromptTemplates:
         6. SCOPE: African countries only. Every card must identify an African country or African region.
 
         Field rules:
-        - countries[] length MUST equal the number of articles in the user message.
+        - countries[] MUST contain only African countries. Omit non-African articles.
         - summary: 1–2 sentences, maximum 200 characters.
         - confidence: integer 0–100 (how clearly the article supports the classification).
         - countryCode: valid ISO 3166-1 alpha-2 (uppercase).
@@ -1662,8 +1823,9 @@ class PEMPromptTemplates:
         {articles_json}
 
         For each article:
-        - Infer country, countryCode, region, category, status, urgency, color, icon, and summary
-          from its title and sourcecountry field.
+        - Infer African country, countryCode, region (African subregion), category, status,
+          urgency, color, icon, and summary from its title and sourcecountry field.
+        - SKIP India, Europe, the US, and any other non-African place.
         - Choose category/status/urgency/color consistently with the headline and story type.
 
         Now return the JSON output.

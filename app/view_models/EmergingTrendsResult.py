@@ -15,7 +15,7 @@ TrendCategory = Literal[
     "Migration",
     "Society",
     "Technology",
-    "Health",
+    "Peace",
 ]
 TrendStatus = Literal["Rising", "Active", "Watch", "Stable", "Critical"]
 TrendUrgency = Literal["low", "medium", "high", "critical"]
@@ -29,7 +29,7 @@ TrendIcon = Literal[
     "migration",
     "society",
     "technology",
-    "health",
+    "peace",
 ]
 
 

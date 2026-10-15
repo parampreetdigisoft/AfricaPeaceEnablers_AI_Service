@@ -259,6 +259,8 @@ embeddings/
 *.npz
 
 # API Keys and Secrets
+.env
+.env.local
 .env.*.ocal
 config.inil
 secrets.json
@@ -318,5 +320,4 @@ experiments/
 # docs/_build/
 # docs/_static/
 # docs/_templates/
-config.bat
-node_modules
+
